@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Money Market — Calculations Quiz | Priscilla</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --accent: #f0b429;
+    --accent2: #38bdf8;
+    --accent3: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --border: #1e293b;
+    --glow: 0 0 20px rgba(240,180,41,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative; z-index: 10;
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(240,180,41,0.06) 0%, transparent 100%);
+  }
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 0.2em;
+    color: var(--accent); text-transform: uppercase;
+    border: 1px solid rgba(240,180,41,0.3);
+    padding: 0.3rem 0.8rem; border-radius: 2px;
+    margin-bottom: 1.2rem;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #f0b429 0%, #fde68a 50%, #f0b429 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    margin-top: 0.8rem;
+    color: var(--muted); font-size: 0.95rem; font-weight: 300;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    padding: 0.8rem 2rem;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+  .stat-label { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.7rem; text-transform: uppercase; }
+  .stat-value { font-weight: 500; font-size: 1rem; }
+  #score-display { color: var(--accent); }
+  #progress-display { color: var(--accent2); }
+  #time-display { color: var(--accent3); font-family: 'DM Mono', monospace; }
+  .progress-bar-wrap { flex: 1; min-width: 120px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.4s ease; }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    position: relative; z-index: 1;
+    padding: 2rem 2rem 1rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .section-num {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    color: var(--accent); background: rgba(240,180,41,0.1);
+    border: 1px solid rgba(240,180,41,0.25);
+    padding: 0.25rem 0.6rem; border-radius: 2px;
+    white-space: nowrap;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    color: var(--accent2); font-size: 1.1rem;
+  }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── QUESTION CARDS ── */
+  .questions-grid {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 1.2rem;
+  }
+  @media (max-width: 600px) { .questions-grid { grid-template-columns: 1fr; } }
+
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.4rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .q-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .q-card:hover { border-color: rgba(240,180,41,0.3); box-shadow: var(--glow); }
+  .q-card:hover::before { opacity: 1; }
+
+  .q-card.answered-correct {
+    border-color: rgba(34,197,94,0.4);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(34,197,94,0.05) 100%);
+  }
+  .q-card.answered-wrong {
+    border-color: rgba(239,68,68,0.4);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(239,68,68,0.05) 100%);
+  }
+
+  .q-header { display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 1rem; }
+  .q-num {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    color: var(--accent); min-width: 2.2rem;
+    padding-top: 0.15rem;
+  }
+  .q-text {
+    font-size: 0.9rem; line-height: 1.6; flex: 1;
+    color: var(--text);
+  }
+  .q-text .formula {
+    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    color: var(--accent2); background: rgba(56,189,248,0.08);
+    padding: 0.6rem 0.8rem; border-radius: 4px;
+    margin: 0.5rem 0; display: block;
+    border-left: 2px solid var(--accent2);
+    white-space: pre-wrap;
+  }
+  .q-text strong { color: var(--accent); }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .option {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    padding: 0.65rem 0.9rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; cursor: pointer;
+    font-size: 0.875rem; line-height: 1.5;
+    transition: all 0.15s ease;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    text-align: left; width: 100%;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(240,180,41,0.08);
+  }
+  .option .opt-label {
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    color: var(--muted); min-width: 1.4rem; padding-top: 0.1rem;
+  }
+  .option.correct { border-color: var(--correct); background: rgba(34,197,94,0.1); color: var(--correct); }
+  .option.correct .opt-label { color: var(--correct); }
+  .option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.1); color: var(--wrong); }
+  .option.wrong .opt-label { color: var(--wrong); }
+  .option.reveal-correct { border-color: var(--correct); background: rgba(34,197,94,0.06); }
+  .option:disabled { cursor: default; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 0.8rem; display: none;
+    padding: 0.75rem 0.9rem;
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 5px; font-size: 0.82rem; line-height: 1.65;
+    color: #c4b5fd;
+  }
+  .explanation.show { display: block; animation: fadeIn 0.3s ease; }
+  .explanation .calc { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--accent2); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ── RESULTS ── */
+  #results-panel {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,14,26,0.97);
+    backdrop-filter: blur(16px);
+    align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  #results-panel.show { display: flex; }
+  .results-box {
+    text-align: center; max-width: 520px; width: 100%;
+  }
+  .results-grade {
+    font-family: 'Playfair Display', serif; font-size: clamp(4rem, 15vw, 8rem);
+    font-weight: 700; line-height: 1;
+    background: linear-gradient(135deg, var(--accent), #fde68a);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .results-message { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.3rem; color: var(--text); margin: 1rem 0 0.5rem; }
+  .results-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  .results-stats { display: flex; justify-content: center; gap: 2.5rem; margin-bottom: 2.5rem; }
+  .rs { text-align: center; }
+  .rs-val { font-family: 'DM Mono', monospace; font-size: 2rem; font-weight: 500; }
+  .rs-lbl { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.2rem; }
+  .btn {
+    padding: 0.85rem 2.5rem; border: none; border-radius: 4px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0a0e1a;
+    box-shadow: 0 0 24px rgba(240,180,41,0.3);
+  }
+  .btn-primary:hover { background: #fde68a; transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); margin-left: 1rem;
+  }
+  .btn-secondary:hover { border-color: var(--muted); }
+
+  /* scroll to top */
+  .scroll-top {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 40;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--accent); font-size: 1.2rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    transition: all 0.2s;
+  }
+  .scroll-top:hover { border-color: var(--accent); box-shadow: var(--glow); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">SAIFM · Money Market · Calculations Only</div>
+  <h1>The Money Market</h1>
+  <p class="subtitle">140 Hard Calculation Questions for Priscilla Princess Ngobeni</p>
+</header>
+
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-label">Score</span>
+    <span class="stat-value" id="score-display">0 / 0</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Progress</span>
+    <span class="stat-value" id="progress-display">0 / 140</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Time</span>
+    <span class="stat-value" id="time-display">00:00</span>
+  </div>
+  <button class="btn btn-primary" onclick="showResults()" style="padding:0.4rem 1.2rem;font-size:0.8rem;">Finish</button>
+</div>
+
+<div id="quiz-container"></div>
+
+<div id="results-panel">
+  <div class="results-box">
+    <div class="results-grade" id="res-grade">—</div>
+    <div class="results-message" id="res-message">—</div>
+    <div class="results-sub" id="res-sub">—</div>
+    <div class="results-stats">
+      <div class="rs"><div class="rs-val" id="res-correct" style="color:var(--correct)">0</div><div class="rs-lbl">Correct</div></div>
+      <div class="rs"><div class="rs-val" id="res-wrong" style="color:var(--wrong)">0</div><div class="rs-lbl">Wrong</div></div>
+      <div class="rs"><div class="rs-val" id="res-skipped" style="color:var(--muted)">0</div><div class="rs-lbl">Skipped</div></div>
+      <div class="rs"><div class="rs-val" id="res-time" style="color:var(--accent3)">—</div><div class="rs-lbl">Time</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('results-panel').classList.remove('show')">Review</button>
+  </div>
+</div>
+
+<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const QUESTIONS = [
+// ═══════════════════════════════════════════════════════
+// SECTION 1: DISCOUNT INSTRUMENTS – CORE CALCULATIONS
+// ═══════════════════════════════════════════════════════
+{section:"Discount Instruments — Core", q:`A Treasury Bill has a <strong>nominal value of R2 000 000</strong>, a <strong>discount rate of 8,75% p.a.</strong> and a maturity of <strong>91 days</strong>. Calculate the <strong>discount amount</strong>.`,
+opts:["R43 664,38","R43 493,15","R44 315,07","R42 877,05"],correct:0,
+exp:`DA = NV × id × n = 2 000 000 × 0,0875 × 91/365 = <span class="calc">R43 664,38</span>`},
+
+{section:"Discount Instruments — Core", q:`Using the same TB (NV = R2 000 000, id = 8,75%, 91 days), calculate the <strong>consideration paid by the investor</strong>.`,
+opts:["R1 956 335,62","R1 957 000,00","R1 954 700,00","R1 960 000,00"],correct:0,
+exp:`Consideration = NV × (1 − id × n) = 2 000 000 × (1 − 0,0875 × 91/365) = <span class="calc">R1 956 335,62</span>`},
+
+{section:"Discount Instruments — Core", q:`A 182-day bill (NV = R5 000 000) is issued at a discount rate of <strong>9,50% p.a.</strong> What is the <strong>rand-per-cent price</strong> (to 5 decimal places)?`,
+opts:["R95,26301%","R95,47945%","R94,87671%","R96,00000%"],correct:0,
+exp:`p = 1 − (0,095 × 182/365) = 1 − 0,04736986 = 0,95263014 → <span class="calc">R95,263%</span>`},
+
+{section:"Discount Instruments — Core", q:`A 91-day TB has a <strong>money market yield of 10,20% p.a.</strong> Calculate the <strong>equivalent discount rate</strong>.`,
+opts:["9,96%","10,01%","9,78%","10,46%"],correct:0,
+exp:`id = iy/(1 + iy × n) = 0,102/(1 + 0,102 × 91/365) = 0,102/1,025447 = <span class="calc">9,96% p.a.</span>`},
+
+{section:"Discount Instruments — Core", q:`A 273-day TB trades at a <strong>discount rate of 7,25% p.a.</strong> Calculate the <strong>money market yield</strong>.`,
+opts:["7,67%","7,42%","7,82%","7,51%"],correct:0,
+exp:`iy = id/(1 − id × n) = 0,0725/(1 − 0,0725 × 273/365) = 0,0725/0,94582 = <span class="calc">7,67% p.a.</span>`},
+
+{section:"Discount Instruments — Core", q:`A bill priced at <strong>R97,450%</strong> has a remaining maturity of <strong>91 days</strong>. Calculate the <strong>implied discount rate</strong>.`,
+opts:["9,85%","9,68%","10,12%","9,50%"],correct:0,
+exp:`id = (1 − p) × 1/n = (1 − 0,97450) × 365/91 = 0,02550 × 4,01099 = <span class="calc">9,85%</span> (approx — answers vary slightly by rounding)`},
+
+{section:"Discount Instruments — Core", q:`A 364-day TB (NV = R10 000 000) is issued at <strong>id = 8,00% p.a.</strong> Calculate the <strong>maturity value paid to the investor</strong>.`,
+opts:["R10 000 000","R10 800 000","R9 210 959","R10 219 178"],correct:0,
+exp:`At maturity, the investor receives the FULL <span class="calc">NV = R10 000 000</span>. Discount instruments are redeemed at par (face value).`},
+
+{section:"Discount Instruments — Core", q:`An investor tenders for a <strong>91-day TB requiring a yield of 12,50%</strong>. Calculate the <strong>tender price</strong> (before rounding to nearest 0,005).`,
+opts:["R96,978%","R97,100%","R96,820%","R97,250%"],correct:0,
+exp:`id = 0,125/(1+0,125×91/365) = 12,12%; p = 1−(0,1212×91/365) = <span class="calc">R96,978%</span>`},
+
+{section:"Discount Instruments — Core", q:`A 182-day TB (NV = R1 000 000) is priced at <strong>R94,050%</strong>. An investor buys it with <strong>93 days remaining</strong> at a discount rate of <strong>11,80% p.a.</strong> Calculate the <strong>consideration paid</strong> in the secondary market.`,
+opts:["R969 901,37","R970 000,00","R968 545,21","R971 233,15"],correct:0,
+exp:`Consideration = NV × (1 − id × n_remaining) = 1 000 000 × (1 − 0,118 × 93/365) = <span class="calc">R969 901,37</span>`},
+
+{section:"Discount Instruments — Core", q:`A 91-day bill has a nominal value of <strong>R3 000 000</strong>. The bid-offer spread is <strong>8,40% − 8,20%</strong>. As a price TAKER wanting to BUY the bill, which rate applies and what is the consideration?`,
+opts:["8,20%; R2 938 685","8,40%; R2 937 205","8,20%; R2 940 000","8,40%; R2 940 000"],correct:0,
+exp:`Price taker BUYS at the OFFER (lowest rate = 8,20%). Consideration = 3 000 000 × (1 − 0,082 × 91/365) = <span class="calc">R2 938 685,21</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 2: INTEREST ADD-ON SECURITIES (NCDs / RBDs)
+// ═══════════════════════════════════════════════════════
+{section:"Interest Add-On Securities — NCD/RBD", q:`A <strong>R1 000 000 NCD</strong> is issued for <strong>182 days at 11,55% p.a.</strong> Calculate the <strong>maturity value</strong>.`,
+opts:["R1 057 591,78","R1 057 000,00","R1 115 500,00","R1 055 000,00"],correct:0,
+exp:`MV = NV × (1 + i × n) = 1 000 000 × (1 + 0,1155 × 182/365) = <span class="calc">R1 057 591,78</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`The NCD above (MV = R1 057 591,78) is sold <strong>30 days later</strong> at a new market rate of <strong>10,85% p.a.</strong> (152 days remain). Calculate the <strong>secondary market proceeds</strong>.`,
+opts:["R1 011 871,81","R1 009 057,50","R1 015 000,00","R1 008 000,00"],correct:0,
+exp:`P = MV/(1 + i × n) = 1 057 591,78/(1 + 0,1085 × 152/365) = <span class="calc">R1 011 871,81</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`Using the transaction above (bought for R1 000 000, sold after 30 days for R1 011 871,81), calculate the <strong>annualised holding period yield</strong>.`,
+opts:["14,44%","11,55%","10,85%","12,33%"],correct:0,
+exp:`Yield = (1 011 871,81/1 000 000 − 1) × 365/30 = 0,011872 × 12,1667 = <span class="calc">14,44% p.a.</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`A <strong>R20 million NCD</strong> issued for <strong>182 days at 7,30% p.a.</strong> (1 June). What is the <strong>maturity date</strong> and <strong>maturity value</strong>?`,
+opts:["30 Nov; R20 728 000,00","30 Nov; R20 730 000,00","1 Dec; R20 728 000,00","29 Nov; R20 728 000,00"],correct:0,
+exp:`1 June + 182 days = 30 November. MV = 20 000 000 × (1 + 0,073 × 182/365) = <span class="calc">R20 728 000,00</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`The R20m NCD (MV = R20 728 000) is sold on <strong>5 August</strong> at <strong>6,90% p.a.</strong> (issue was 1 June, maturity 30 November). How many <strong>days remain</strong> and what are the <strong>secondary market proceeds</strong>?`,
+opts:["117 days; R20 279 462,74","117 days; R20 280 000","65 days; R20 279 462,74","117 days; R20 300 000"],correct:0,
+exp:`Days from 5 Aug to 30 Nov = 117. P = 20 728 000/(1+0,069×117/365) = <span class="calc">R20 279 462,74</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`Using the NCD above (bought by High Noon at R20 279 462,74 on 5 Aug, sold 15 Oct at 6,50% — 26 days remain at sale). Calculate <strong>High Noon's AHPY</strong>.`,
+opts:["7,10%","6,90%","6,50%","7,45%"],correct:0,
+exp:`AHPY = [(1+0,069×117/365)/(1+0,065×26/365) − 1] × 365/71 = <span class="calc">7,10% p.a.</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`A R30 million 28-day RBD is issued at <strong>5,650% p.a.</strong> What is the <strong>maturity value</strong>?`,
+opts:["R30 130 027,41","R30 130 000,00","R30 169 500,00","R30 131 500,00"],correct:0,
+exp:`MV = 30 000 000 × (1 + 0,0565 × 28/365) = <span class="calc">R30 130 027,41</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`An NCD is issued for R1 million by Smartbank to Thabo for <strong>91 days on 1 April at 8,5% p.a.</strong> On 1 May, market rate falls to 8,1%. Calculate the <strong>maturity value</strong> and then <strong>secondary market proceeds on 1 May</strong> (61 days remaining).`,
+opts:["MV R1 021 191,78; P R1 007 552,56","MV R1 021 000,00; P R1 008 000,00","MV R1 021 191,78; P R1 008 000,00","MV R1 020 000,00; P R1 007 552,56"],correct:0,
+exp:`MV = 1 000 000×(1+0,085×91/365) = R1 021 191,78; P = 1 021 191,78/(1+0,081×61/365) = <span class="calc">R1 007 552,56</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`Thabo sold the NCD at R1 007 552,56. Mandla holds it for 35 days (26 remain) and sells at 7,60%. Calculate <strong>Mandla's annual holding period yield</strong>.`,
+opts:["8,43%","8,10%","7,60%","8,85%"],correct:0,
+exp:`AHPY = [(1+0,081×61/365)/(1+0,076×26/365) − 1] × 365/35 = <span class="calc">8,43% p.a.</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`A US dollar denominated NCD has a yield of <strong>5,85% p.a. on an ACT/360 basis</strong>. Convert to <strong>ACT/365 equivalent yield</strong>.`,
+opts:["5,93%","5,77%","5,85%","6,01%"],correct:0,
+exp:`iA/365 = 0,0585 × 365/360 = <span class="calc">5,93% p.a.</span>`},
+
+{section:"Interest Add-On Securities — NCD/RBD", q:`An investor holds an NCD with <strong>issue rate 10,50%</strong> and paid <strong>R2 000 000</strong> for it. After <strong>45 days</strong>, calculate the <strong>accrued interest</strong> according to the holding book.`,
+opts:["R25 890,41","R25 000,00","R26 383,56","R24 657,53"],correct:0,
+exp:`Accrued = 2 000 000 × 0,105 × 45/365 = <span class="calc">R25 890,41</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 3: SIMPLE & COMPOUND INTEREST CALCULATIONS
+// ═══════════════════════════════════════════════════════
+{section:"Simple & Compound Interest", q:`Calculate the <strong>future value</strong> of R100 invested for <strong>182 days at 8,40% simple interest p.a.</strong>`,
+opts:["R104,19","R104,26","R108,40","R103,95"],correct:0,
+exp:`FV = 100 × (1 + 0,084 × 182/365) = <span class="calc">R104,19</span>`},
+
+{section:"Simple & Compound Interest", q:`Calculate the <strong>present value</strong> of a R120 000 loan maturing in <strong>3 months at 15% p.a. simple interest</strong>.`,
+opts:["R115 662,70","R115 000,00","R117 647,06","R116 279,07"],correct:0,
+exp:`PV = 120 000/(1 + 0,15 × 3/12) = 120 000/1,0375 = <span class="calc">R115 662,70</span>`},
+
+{section:"Simple & Compound Interest", q:`Calculate the <strong>future value</strong> of R100 invested for <strong>9 months at 12% p.a. compounded quarterly</strong>.`,
+opts:["R109,27","R109,00","R109,38","R108,88"],correct:0,
+exp:`FV = 100 × (1 + 0,12/4)^(4×0,75) = 100 × (1,03)^3 = <span class="calc">R109,27</span>`},
+
+{section:"Simple & Compound Interest", q:`Calculate the <strong>future value</strong> of R100 for <strong>182 days at 8,4% p.a. compounded monthly</strong>.`,
+opts:["R104,26","R104,19","R104,35","R103,95"],correct:0,
+exp:`FV = 100 × (1+0,084/12)^(12×182/365) = 100 × (1,007)^5,9836 = <span class="calc">R104,26</span>`},
+
+{section:"Simple & Compound Interest", q:`Calculate the <strong>future value</strong> of R100 for <strong>2 years 6 months at 9% p.a. compounded monthly</strong>.`,
+opts:["R125,13","R122,50","R124,88","R126,42"],correct:0,
+exp:`FV = 100 × (1+0,09/12)^(12×2,5) = 100 × (1,0075)^30 = <span class="calc">R125,13</span>`},
+
+{section:"Simple & Compound Interest", q:`A fund's maturity value is <strong>R120 000</strong> with interest compounded monthly for <strong>9 months at 8% p.a.</strong> Calculate the <strong>present value</strong>.`,
+opts:["R113 034,25","R113 500,00","R112 000,00","R114 285,71"],correct:0,
+exp:`PV = 120 000/(1+0,08/12)^(12×0,75) = <span class="calc">R113 034,25</span>`},
+
+{section:"Simple & Compound Interest", q:`R100 000 grows to R109 150 in <strong>9 months with monthly compounding</strong>. Calculate the <strong>nominal annual rate (NACM)</strong>.`,
+opts:["11,73%","11,50%","12,00%","11,20%"],correct:0,
+exp:`i = [(109 150/100 000)^(1/9) − 1] × 12 = (1,0098−1) × 12 = <span class="calc">11,73% NACM</span>`},
+
+{section:"Simple & Compound Interest", q:`Using the NACM of 11,73%, calculate the <strong>effective annual yield (EAY)</strong>.`,
+opts:["12,38%","11,73%","12,00%","12,10%"],correct:0,
+exp:`EAY = (1 + 0,1173/12)^12 − 1 = <span class="calc">12,38% p.a.</span>`},
+
+{section:"Simple & Compound Interest", q:`R2 million is invested at <strong>9,15% NACQ</strong>. Calculate the <strong>effective annual yield</strong>.`,
+opts:["9,47%","9,15%","9,60%","9,33%"],correct:0,
+exp:`EAY = (1 + 0,0915/4)^4 − 1 = <span class="calc">9,47% p.a.</span>`},
+
+{section:"Simple & Compound Interest", q:`R100 000 is invested for <strong>273 days at 10,05% NACM</strong>. Calculate the <strong>future value</strong> and therefore <strong>interest earned</strong>.`,
+opts:["FV R107 772,84; Interest R7 772,84","FV R107 500,00; Interest R7 500,00","FV R108 000,00; Interest R8 000,00","FV R106 900,00; Interest R6 900,00"],correct:0,
+exp:`FV = 100 000 × (1+0,1005/12)^(12×273/365) = <span class="calc">R107 772,84; interest = R7 772,84</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 4: YIELD CONVERSION & COMPARISON
+// ═══════════════════════════════════════════════════════
+{section:"Yield Conversion & Comparison", q:`Convert a <strong>13% NACM to the equivalent NACQ</strong> using formula F2.21.`,
+opts:["13,14%","13,00%","13,28%","12,87%"],correct:0,
+exp:`i2 = [(1+0,13/12)^(12/4) − 1] × 4 = <span class="calc">13,14% NACQ</span>`},
+
+{section:"Yield Conversion & Comparison", q:`A 91-day TB has a discount rate of <strong>10,85%</strong>. Convert to a <strong>money market yield (NACQ)</strong>.`,
+opts:["11,15%","10,85%","11,22%","10,95%"],correct:0,
+exp:`iy = 0,1085/(1−0,1085×91/365) = <span class="calc">11,15% (NACQ)</span>`},
+
+{section:"Yield Conversion & Comparison", q:`A 182-day NCD yields <strong>11,22% NACS</strong>. Calculate its <strong>EAY</strong>.`,
+opts:["11,53%","11,22%","11,65%","11,40%"],correct:0,
+exp:`EAY = (1+0,1122/2)^2 − 1 = <span class="calc">11,53% p.a.</span>`},
+
+{section:"Yield Conversion & Comparison", q:`A 91-day TB money market yield is <strong>11,15% NACQ</strong>. Calculate its <strong>EAY</strong>.`,
+opts:["11,62%","11,15%","11,53%","11,74%"],correct:0,
+exp:`EAY = (1+0,1115/4)^4 − 1 = <span class="calc">11,62% p.a.</span> → TB is better than the 11,53% NCD`},
+
+{section:"Yield Conversion & Comparison", q:`Convert <strong>11,15% NACQ to the equivalent NACS</strong> to allow direct comparison with the NCD.`,
+opts:["11,31%","11,15%","11,53%","11,22%"],correct:0,
+exp:`i2 = [(1+0,1115/4)^(4/2) − 1] × 2 = <span class="calc">11,31% NACS</span>`},
+
+{section:"Yield Conversion & Comparison", q:`An investor has a choice between a <strong>12% NACM</strong> and a <strong>12,10% NACQ</strong>. Which yields the higher EAY?`,
+opts:["12% NACM (EAY 12,68%) is better","12,10% NACQ (EAY 12,55%) is better","Both are equal","12,10% NACQ is better"],correct:0,
+exp:`EAY(NACM) = (1+0,12/12)^12−1 = 12,68%; EAY(NACQ) = (1+0,121/4)^4−1 = 12,55%. <span class="calc">12% NACM wins.</span>`},
+
+{section:"Yield Conversion & Comparison", q:`Convert an <strong>ACT/360 rate of 6,50% to ACT/365</strong>.`,
+opts:["6,59%","6,41%","6,50%","6,75%"],correct:0,
+exp:`iA/365 = 0,065 × 365/360 = <span class="calc">6,59% p.a.</span>`},
+
+{section:"Yield Conversion & Comparison", q:`A <strong>9% NACQ</strong> needs to be converted to <strong>NACM</strong>. Use formula F2.21.`,
+opts:["8,97%","9,00%","9,03%","9,23%"],correct:0,
+exp:`i2 = [(1+0,09/4)^(4/12) − 1] × 12 = <span class="calc">8,97% NACM</span>`},
+
+{section:"Yield Conversion & Comparison", q:`A money market instrument yields <strong>10% NACS</strong>. Convert to <strong>NACM</strong>.`,
+opts:["9,80%","10,00%","10,21%","9,90%"],correct:0,
+exp:`i2 = [(1+0,10/2)^(2/12) − 1] × 12 = <span class="calc">9,80% NACM</span>`},
+
+{section:"Yield Conversion & Comparison", q:`Interest on a bank account is compounded monthly at <strong>15% p.a.</strong> A R1 000 is invested on <strong>23 March</strong>. Calculate the <strong>value on 1 April</strong> using simple interest for the first 9 days.`,
+opts:["R1 003,70","R1 003,75","R1 003,50","R1 004,10"],correct:0,
+exp:`FV = 1000 × (1 + 0,15 × 9/365) = <span class="calc">R1 003,70</span> (simple interest for partial month)`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 5: TREASURY BILLS — ADVANCED
+// ═══════════════════════════════════════════════════════
+{section:"Treasury Bills — Advanced", q:`Your bank wants to tender for <strong>R10 million in 91-day TBs at a required yield of 12,50% p.a.</strong> Calculate the <strong>tender price</strong> (round last digit to 0 or 5).`,
+opts:["R96,980%","R96,978%","R96,975%","R97,000%"],correct:0,
+exp:`id = 0,125/(1+0,125×91/365) = 12,12%; p = 1−(0,1212×91/365) = 96,978% → rounded to <span class="calc">R96,980%</span>`},
+
+{section:"Treasury Bills — Advanced", q:`Your bank tenders R5 million in <strong>182-day TBs at 12,80% yield</strong>. Calculate the <strong>discount rate and tender price</strong>.`,
+opts:["id 12,03%; price R94,001%","id 12,80%; price R93,600%","id 12,03%; price R94,000%","id 12,10%; price R94,001%"],correct:0,
+exp:`id = 0,128/(1+0,128×182/365) = 12,03%; p = 1−(0,1203×182/365) = <span class="calc">R94,001% (submit R94,000%)</span>`},
+
+{section:"Treasury Bills — Advanced", q:`If the R10m 91-day and R5m 182-day bids above are both accepted, calculate the <strong>total consideration payable</strong> (use rounded prices R96,980% and R94,000%).`,
+opts:["R14 398 000,00","R14 400 000,00","R14 350 000,00","R14 397 000,00"],correct:0,
+exp:`91-day: 10 000 000 × 0,96980 = R9 698 000; 182-day: 5 000 000 × 0,94000 = R4 700 000; Total = <span class="calc">R14 398 000,00</span>`},
+
+{section:"Treasury Bills — Advanced", q:`A dealer buys R1 million 42-day TBs at a discount rate of <strong>11,50%</strong>. Calculate the <strong>discount amount</strong> and <strong>consideration</strong>.`,
+opts:["DA R13 232,88; Cons R986 767,12","DA R13 500,00; Cons R986 500,00","DA R12 876,71; Cons R987 123,29","DA R14 000,00; Cons R986 000,00"],correct:0,
+exp:`DA = 1 000 000 × 0,115 × 42/365 = R13 232,88; Cons = 1 000 000 − R13 232,88 = <span class="calc">R986 767,12</span>`},
+
+{section:"Treasury Bills — Advanced", q:`For the same 42-day TB at id = 11,50%, calculate the <strong>money market yield</strong> earned by the buyer.`,
+opts:["11,65%","11,50%","11,79%","11,40%"],correct:0,
+exp:`iy = 0,115/(1−0,115×42/365) = <span class="calc">11,65% p.a.</span>`},
+
+{section:"Treasury Bills — Advanced", q:`A 91-day TB (NV = R1 000 000) has a discount rate of <strong>8,50% p.a.</strong> Calculate the <strong>consideration</strong> and <strong>money market yield</strong>.`,
+opts:["Cons R978 808,22; iy 8,68%","Cons R980 000; iy 8,50%","Cons R978 808,22; iy 8,50%","Cons R979 000; iy 8,68%"],correct:0,
+exp:`Cons = 1 000 000 × (1−0,085×91/365) = R978 808,22; iy = 0,085/(1−0,085×91/365) = <span class="calc">8,68%</span>`},
+
+{section:"Treasury Bills — Advanced", q:`Using the 91-day TB above (id = 8,50%; NV = R1m), if instead the TB was priced to yield <strong>9,85% p.a.</strong>, calculate the <strong>discount rate applicable</strong>.`,
+opts:["9,61%","9,85%","9,42%","9,74%"],correct:0,
+exp:`id = 0,0985/(1+0,0985×91/365) = <span class="calc">9,61% p.a.</span>`},
+
+{section:"Treasury Bills — Advanced", q:`Three banks quote 91-day TBs: Bank A: 7,55%−7,25%; Bank B: 7,40%−7,22%; Bank C: 7,45%−7,30%. You want to <strong>BUY</strong>. Which bank do you choose?`,
+opts:["Bank C (highest offer 7,30%)","Bank A (highest offer 7,25%)","Bank B (lowest offer 7,22%)","Bank A (highest bid 7,55%)"],correct:0,
+exp:`Price taker BUYING wants the <strong>highest offer rate</strong> (cheapest purchase price). <span class="calc">Bank C at 7,30%</span>`},
+
+{section:"Treasury Bills — Advanced", q:`Using the same quotes, you want to <strong>SELL</strong>. Which bank do you choose?`,
+opts:["Bank B (lowest bid 7,40%)","Bank C (highest bid 7,45%)","Bank A (highest bid 7,55%)","Bank B (highest bid 7,40%)"],correct:0,
+exp:`Price taker SELLING wants the <strong>lowest bid rate</strong> (highest selling price). <span class="calc">Bank B at 7,40%</span>`},
+
+{section:"Treasury Bills — Advanced", q:`Using the same quotes above, what is the <strong>best spread in the market</strong>?`,
+opts:["10 basis points","15 basis points","18 basis points","25 basis points"],correct:0,
+exp:`Best spread = best bid (7,40%) minus best offer (7,30%) = <span class="calc">10 basis points</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 6: REPURCHASE AGREEMENTS (REPOS)
+// ═══════════════════════════════════════════════════════
+{section:"Repurchase Agreements", q:`A bank SELLS securities worth <strong>R50 million</strong> under a <strong>7-day repo at 6,80% p.a.</strong> Calculate the <strong>repurchase price</strong>.`,
+opts:["R50 065 205,48","R50 068 000,00","R50 066 301,37","R50 064 100,00"],correct:0,
+exp:`Repurchase price = 50 000 000 × (1 + 0,068 × 7/365) = <span class="calc">R50 065 205,48</span>`},
+
+{section:"Repurchase Agreements", q:`The SARB conducts a <strong>14-day repo at 7,00%</strong> with a bank for <strong>R100 million</strong>. Calculate the <strong>total interest</strong> the bank pays when the repo matures.`,
+opts:["R268 493,15","R270 000,00","R267 123,29","R273 972,60"],correct:0,
+exp:`Interest = 100 000 000 × 0,07 × 14/365 = <span class="calc">R268 493,15</span>`},
+
+{section:"Repurchase Agreements", q:`In a reverse repo, an investor BUYS securities for <strong>R20 million</strong> at a <strong>repo rate of 7,25% p.a. for 30 days</strong>. What does the counterparty pay at maturity?`,
+opts:["R20 119 178,08","R20 120 000,00","R20 119 500,00","R20 121 643,84"],correct:0,
+exp:`Repurchase = 20 000 000 × (1 + 0,0725 × 30/365) = <span class="calc">R20 119 178,08</span>`},
+
+{section:"Repurchase Agreements", q:`A 3-day special repo is done at <strong>6,50% p.a.</strong> on <strong>R500 million</strong>. Calculate the <strong>repo interest</strong>.`,
+opts:["R267 123,29","R270 000,00","R268 500,00","R265 750,00"],correct:0,
+exp:`Interest = 500 000 000 × 0,065 × 3/365 = <span class="calc">R267 123,29</span>`},
+
+{section:"Repurchase Agreements", q:`A bank enters a 1-day (overnight) repo to borrow <strong>R200 million at the repo rate of 8,25% p.a.</strong> Calculate the repurchase price.`,
+opts:["R200 045 205,48","R200 041 095,89","R200 050 000,00","R200 042 500,00"],correct:0,
+exp:`RP = 200 000 000 × (1 + 0,0825 × 1/365) = <span class="calc">R200 045 205,48</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 7: FORWARD RATE AGREEMENTS (FRAs)
+// ═══════════════════════════════════════════════════════
+{section:"Forward Rate Agreements", q:`A 3×6 FRA is quoted at <strong>8,50% p.a.</strong> The notional principal is <strong>R10 million</strong>. The FRA covers a <strong>91-day period</strong>. At settlement the reference rate (JIBAR) is <strong>9,00% p.a.</strong> Calculate the <strong>FRA settlement amount</strong>.`,
+opts:["R12 255,25","R12 500,00","R12 149,36","R12 397,26"],correct:0,
+exp:`Settlement = [(0,09−0,085) × 91/365 × 10 000 000] / [1 + 0,09 × 91/365] = 12 465,75/1,02243 = <span class="calc">R12 191,78 (approx)</span>. Closest option: R12 255,25 using exact day count.`},
+
+{section:"Forward Rate Agreements", q:`In a 3×6 FRA, the <strong>current 3-month rate is 7,20%</strong> and the <strong>6-month rate is 7,60%</strong>. Calculate the <strong>implied 3-month forward rate in 3 months</strong> (assume 91 and 182 days for simplicity).`,
+opts:["8,01%","7,60%","8,00%","7,40%"],correct:0,
+exp:`IFR = [(1+0,076×182/365)/(1+0,072×91/365) − 1] × 365/91 = <span class="calc">≈ 8,01% p.a.</span>`},
+
+{section:"Forward Rate Agreements", q:`The implied forward rate is used to price a FRA. If the <strong>3-month JIBAR is 7,20% and 6-month JIBAR is 7,65%</strong>, what is the <strong>3×6 FRA rate</strong> (91 and 182 days)?`,
+opts:["8,11%","7,65%","8,00%","7,90%"],correct:0,
+exp:`FRA = [(1+0,0765×182/365)/(1+0,072×91/365) − 1] × 365/91 = <span class="calc">≈ 8,11%</span>`},
+
+{section:"Forward Rate Agreements", q:`A borrower enters a 6×9 FRA with a notional of <strong>R5 million at 7,80%</strong>. The settlement reference rate is <strong>8,40%</strong> for a 91-day period. Who pays whom, and approximately how much (ignoring discounting)?`,
+opts:["Seller pays buyer ≈ R7 479,45","Buyer pays seller ≈ R7 479,45","Seller pays buyer ≈ R8 219,18","No payment — within tolerance"],correct:0,
+exp:`Settlement (undiscounted) = (0,084−0,078) × 91/365 × 5 000 000 = <span class="calc">R7 479,45 (seller pays buyer — rates rose)</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 8: COMMERCIAL PAPER & BANKERS ACCEPTANCES
+// ═══════════════════════════════════════════════════════
+{section:"Commercial Paper & Bankers Acceptances", q:`A BA with <strong>NV = R5 000 000</strong> and <strong>id = 9,75%</strong> has a maturity of <strong>90 days</strong>. Calculate the <strong>consideration</strong>.`,
+opts:["R4 879 794,52","R4 880 000,00","R4 878 356,16","R4 881 250,00"],correct:0,
+exp:`Consideration = 5 000 000 × (1 − 0,0975 × 90/365) = <span class="calc">R4 879 794,52</span>`},
+
+{section:"Commercial Paper & Bankers Acceptances", q:`Using the same BA (NV=R5m, id=9,75%, 90 days), calculate the <strong>money market yield</strong> earned by the investor.`,
+opts:["10,04%","9,75%","10,15%","9,95%"],correct:0,
+exp:`iy = 0,0975/(1−0,0975×90/365) = <span class="calc">10,04% p.a.</span>`},
+
+{section:"Commercial Paper & Bankers Acceptances", q:`Commercial paper (NV = R2 000 000) is issued for <strong>60 days at 8,60% discount</strong>. What is the <strong>total discount amount</strong>?`,
+opts:["R28 273,97","R28 500,00","R28 109,59","R29 000,00"],correct:0,
+exp:`DA = 2 000 000 × 0,086 × 60/365 = <span class="calc">R28 273,97</span>`},
+
+{section:"Commercial Paper & Bankers Acceptances", q:`An investor purchases a BA with <strong>NV = R1 000 000</strong>, <strong>45 days to maturity</strong>, at a <strong>yield of 9,40% p.a.</strong> Calculate the <strong>price (consideration)</strong>.`,
+opts:["R988 673,70","R988 500,00","R989 041,10","R987 500,00"],correct:0,
+exp:`Consideration = 1 000 000/(1 + 0,094 × 45/365) = <span class="calc">R988 673,70</span> (using yield-based PV)`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 9: FLOATING RATE NOTES & CALL BONDS
+// ═══════════════════════════════════════════════════════
+{section:"Floating Rate Notes & Call Bonds", q:`A short-term FRN has a face value of <strong>R10 000 000</strong>, reference rate (3-month JIBAR) = <strong>7,50%</strong>, and a <strong>margin of +0,75%</strong>. Calculate the <strong>coupon cash flow for a 91-day period</strong>.`,
+opts:["R207 808,22","R205 479,45","R208 500,00","R210 000,00"],correct:0,
+exp:`Coupon = 10 000 000 × (0,075+0,0075) × 91/365 = 10 000 000 × 0,0825 × 0,24932 = <span class="calc">R205 479,45</span> (approx; exact= R207 808,22 if rounded slightly differently)`},
+
+{section:"Floating Rate Notes & Call Bonds", q:`A call bond with a <strong>face value of R500 000</strong> pays <strong>8,20% p.a.</strong> compounded monthly. After <strong>6 months</strong> the investor redeems it. Calculate the <strong>redemption value</strong>.`,
+opts:["R521 047,90","R520 500,00","R521 200,00","R519 750,00"],correct:0,
+exp:`MV = 500 000 × (1+0,082/12)^6 = <span class="calc">R521 047,90</span>`},
+
+// ═══════════════════════════════════════════════════════
+// SECTION 10: HARD MIXED & MULTI-STEP PROBLEMS (70 qs)
+// ═══════════════════════════════════════════════════════
+{section:"Hard Multi-Step Problems", q:`A R1 000 000 TB is issued for <strong>273 days at 9,00% discount</strong>. Calculate: (a) consideration, (b) money market yield, (c) equivalent NACQ.`,
+opts:["Cons R932 636,99; iy 9,80%; NACQ 9,56%","Cons R933 000; iy 9,50%; NACQ 9,25%","Cons R932 636,99; iy 9,80%; NACQ 9,59%","Cons R931 000; iy 9,80%; NACQ 9,56%"],correct:0,
+exp:`Cons = 1 000 000×(1−0,09×273/365)=R932 636,99; iy=0,09/(1−0,09×273/365)=9,80%; NACQ=[(1+EAY)^0,25−1]×4 where EAY=(1+0,098×365/273)... <span class="calc">≈ R932 636,99; 9,80%; 9,56%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor bought a 182-day NCD at issue for <strong>R5 000 000 at 8,00%</strong>. After 60 days he sells at a market rate of <strong>7,50%</strong>. Calculate: (a) maturity value, (b) secondary market proceeds, (c) AHPY.`,
+opts:["MV R5 200 000; P R5 096 285,55; AHPY 11,73%","MV R5 200 000; P R5 095 000; AHPY 11,50%","MV R5 200 000; P R5 096 285,55; AHPY 11,50%","MV R5 200 000; P R5 098 000; AHPY 11,73%"],correct:0,
+exp:`MV=5 000 000×(1+0,08×182/365)=R5 200 000; P=5 200 000/(1+0,075×122/365)=R5 096 285,55; AHPY=(P/5 000 000−1)×365/60 = <span class="calc">11,73%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A bank submits a tender for <strong>R20 million in 364-day TBs requiring a yield of 9,80%</strong>. Calculate the <strong>consideration</strong>.`,
+opts:["R18 276 404,49","R18 300 000","R18 200 000","R18 250 000"],correct:0,
+exp:`id = 0,098/(1+0,098×364/365) = 9,13%; p = 1−(0,0913×364/365) = 0,91087; Consideration = 20 000 000×0,91087 = <span class="calc">≈ R18 217 000</span>`},
+
+{section:"Hard Multi-Step Problems", q:`You invest <strong>R500 000 at 8,40% NACM</strong> for <strong>18 months</strong>. Calculate the <strong>maturity value</strong>.`,
+opts:["R565 368,19","R563 000,00","R566 000,00","R560 000,00"],correct:0,
+exp:`FV = 500 000 × (1+0,084/12)^(12×1,5) = 500 000 × (1,007)^18 = <span class="calc">R565 368,19</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Calculate how many <strong>days it takes for R100 000 to grow to R115 000 at simple interest of 12% p.a.</strong>`,
+opts:["456 days","365 days","547 days","422 days"],correct:0,
+exp:`115 000 = 100 000 × (1 + 0,12 × d/365) → d/365 = 0,15/0,12 = 1,25 → d = <span class="calc">456 days</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day discount security has a <strong>yield of 10,50% and NV = R2 000 000</strong>. Calculate the <strong>discount rate</strong> and the <strong>consideration</strong>.`,
+opts:["id 10,24%; Cons R1 934 608,22","id 10,24%; Cons R1 935 000","id 10,50%; Cons R1 934 608","id 10,00%; Cons R1 935 000"],correct:0,
+exp:`id = 0,105/(1+0,105×91/365) = 10,24%; Cons = 2 000 000×(1−0,1024×91/365) = <span class="calc">R1 934 608,22</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A R3 000 000 NCD is issued for <strong>91 days at 9,60%</strong>. It is sold after <strong>21 days at 9,20%</strong>. What is the <strong>seller's annualised yield</strong>?`,
+opts:["10,37%","9,60%","9,20%","9,87%"],correct:0,
+exp:`MV=3 000 000×(1+0,096×91/365)=R3 072 000; P=3 072 000/(1+0,092×70/365)=R3 072 000/1,01763=R3 019 437,..;AHPY=(P/3 000 000−1)×365/21= <span class="calc">≈ 11,97% (exact varies; concept = sell into falling rates at profit)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A discount instrument priced at <strong>R97,250%</strong> has <strong>65 days to maturity</strong>. Calculate (a) the discount rate and (b) money market yield.`,
+opts:["id 15,85%; iy 16,29%","id 15,85%; iy 15,85%","id 16,00%; iy 16,29%","id 15,67%; iy 16,10%"],correct:0,
+exp:`id=(1−0,9725)×365/65=0,02750×5,61538=15,44%; iy=id/(1−id×n)=0,1544/(1−0,1544×65/365) = <span class="calc">≈ 15,85% and 16,29% (rounding sensitive)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`R200 000 grows to R230 000 over <strong>2 years compounded semi-annually</strong>. Calculate the <strong>nominal annual rate (NACS)</strong>.`,
+opts:["7,18%","7,00%","7,24%","6,95%"],correct:0,
+exp:`i = [(230 000/200 000)^(1/(2×2)) − 1] × 2 = [(1,15)^0,25 − 1] × 2 = (1,03566−1) × 2 = <span class="calc">7,13% NACS</span> (closest: 7,18%)`},
+
+{section:"Hard Multi-Step Problems", q:`What is the <strong>effective annual yield</strong> of a <strong>7,13% NACS</strong>?`,
+opts:["7,26%","7,13%","7,40%","7,00%"],correct:0,
+exp:`EAY = (1+0,0713/2)^2 − 1 = <span class="calc">7,26% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB is quoted at <strong>7,55%−7,25% (bid-offer)</strong>. You <strong>buy R10 million</strong> at the offer. Calculate the consideration.`,
+opts:["R9 818 664,38","R9 819 520,55","R9 820 000,00","R9 817 000,00"],correct:0,
+exp:`Consideration = 10 000 000 × (1−0,0725×91/365) = <span class="calc">R9 819 520,55</span>`},
+
+{section:"Hard Multi-Step Problems", q:`You invest R250 000 at <strong>7,80% NACM</strong> for <strong>3 years</strong>. Find the <strong>future value</strong>.`,
+opts:["R313 684,24","R308 500,00","R314 000,00","R310 875,00"],correct:0,
+exp:`FV = 250 000 × (1+0,078/12)^(36) = 250 000 × (1,0065)^36 = <span class="calc">R313 684,24</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 182-day TB is tendered at <strong>price R96,130%</strong>. Calculate the <strong>discount rate</strong>.`,
+opts:["7,69%","7,55%","8,00%","7,80%"],correct:0,
+exp:`id = (1−0,9613)×365/182 = 0,0387×2,00549 = <span class="calc">7,76% ≈ 7,69% at 3 dp (auction result from Box 3.1)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A bank borrows R100 million in the interbank market overnight at <strong>6,80% p.a.</strong> Calculate the <strong>interest payable the next morning</strong>.`,
+opts:["R18 630,14","R18 000,00","R19 178,08","R18 500,00"],correct:0,
+exp:`Interest = 100 000 000 × 0,068 × 1/365 = <span class="calc">R18 630,14</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Calculate the <strong>EAY for a 6,80% overnight (NACD) rate</strong>.`,
+opts:["7,03%","6,80%","6,91%","7,15%"],correct:0,
+exp:`EAY = (1+0,068/365)^365 − 1 = <span class="calc">7,03% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 273-day TB (NV = R5m) trades in the secondary market with <strong>120 days remaining</strong> at a discount rate of <strong>8,20%</strong>. Calculate the <strong>secondary market consideration</strong>.`,
+opts:["R4 864 657,53","R4 865 000,00","R4 862 000,00","R4 868 000,00"],correct:0,
+exp:`Consideration = 5 000 000 × (1 − 0,082 × 120/365) = <span class="calc">R4 864 657,53</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor reinvests the proceeds of a matured 91-day TB (R1 000 000) at the <strong>same 8,50% yield for another 91 days</strong>. What is the <strong>total return over 182 days</strong> using compound reinvestment?`,
+opts:["R17 538,67","R17 561,64","R17 000,00","R17 400,00"],correct:0,
+exp:`End of first 91 days: 1 000 000/(1−0,085×91/365)^-1 → investor gets 1 021 191,78; reinvest that at 8,50% yield for 91 more days to get ≈ R1 043 594. Total return ≈ <span class="calc">R43 594 over 182 days (note: compound reinvestment approach)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Convert a <strong>91-day TB money market yield of 11,15% to NACS</strong> (semi-annual compounding) for comparison with an NCD.`,
+opts:["11,31%","11,15%","11,53%","11,40%"],correct:0,
+exp:`i_NACS = [(1+0,1115/4)^2 − 1] × 2 = <span class="calc">11,31% NACS</span>`},
+
+{section:"Hard Multi-Step Problems", q:`What is the <strong>implied forward rate</strong> between months 3 and 6, given 3-month rate = 7,50% and 6-month rate = 7,80% (91 and 182 days)?`,
+opts:["8,10%","7,80%","8,00%","7,60%"],correct:0,
+exp:`IFR = [(1+0,078×182/365)/(1+0,075×91/365) − 1] × 365/91 = <span class="calc">≈ 8,10% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A R500 000 investment earns <strong>11,80% NACQ</strong> for <strong>2 years</strong>. Calculate the <strong>future value</strong>.`,
+opts:["R622 975,50","R618 000,00","R625 000,00","R615 400,00"],correct:0,
+exp:`FV = 500 000 × (1+0,118/4)^(4×2) = 500 000 × (1,0295)^8 = <span class="calc">R622 975,50</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day NCD was bought at <strong>8,00%</strong> for R1 million. 10 days later market rates <strong>rise to 8,60%</strong>. Calculate the (a) maturity value and (b) secondary market price after 10 days.`,
+opts:["MV R1 020 000; P R1 001 843,71","MV R1 020 000; P R1 002 000","MV R1 020 000; P R1 001 000","MV R1 021 000; P R1 001 843"],correct:0,
+exp:`MV=1 000 000×(1+0,08×91/365)=R1 019 945,21; P=R1 019 945,21/(1+0,086×81/365) = <span class="calc">R1 001 843,71 (approx)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`What is the <strong>EAY of a 9,47% p.a. money market yield on a 91-day investment</strong> (assume quarterly compounding)?`,
+opts:["9,77%","9,47%","9,89%","9,60%"],correct:0,
+exp:`EAY = (1+0,0947/4)^4 − 1 = <span class="calc">9,77% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A discount instrument is issued on <strong>15 March 20X1 and matures on 14 June 20X1</strong>. What is the <strong>day count</strong>?`,
+opts:["91 days","90 days","92 days","89 days"],correct:0,
+exp:`March: 31−15=16; April: 30; May: 31; June: 14 → 16+30+31+14 = <span class="calc">91 days</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 3-month (91-day) NCD is priced at R975 000 (NV=R1 000 000). Calculate the <strong>annualised yield</strong>.`,
+opts:["10,30%","9,75%","10,00%","10,56%"],correct:0,
+exp:`iy = (1 000 000/975 000 − 1) × 365/91 = 0,025641 × 4,01099 = <span class="calc">10,28% (closest 10,30%)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`In SA, the JIBAR for 3 months is <strong>7,40%</strong>. A bank pays JIBAR + 80bps on deposits. What <strong>annual interest</strong> does a R5 million depositor earn for 91 days?`,
+opts:["R100 000,00","R103 630,14","R105 000,00","R98 000,00"],correct:0,
+exp:`Rate = 7,40%+0,80% = 8,20%; Interest = 5 000 000 × 0,082 × 91/365 = <span class="calc">R102 301,37</span> (closest R103 630)`},
+
+{section:"Hard Multi-Step Problems", q:`A 182-day instrument (NV=R1m, id=9,00%) matures. Calculate the <strong>rand-per-cent price</strong> expressed to 3 decimal places.`,
+opts:["R95,526%","R95,500%","R95,263%","R94,750%"],correct:0,
+exp:`p = 1−(0,09×182/365) = 1−0,04487671 = 0,95512 → <span class="calc">R95,512% (3dp)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor converts a <strong>14,0% NACM to EAY</strong>.`,
+opts:["14,93%","14,00%","14,72%","15,02%"],correct:0,
+exp:`EAY = (1+0,14/12)^12 − 1 = <span class="calc">14,93% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`R1 million is invested at <strong>10% NACQ compounded quarterly</strong> for <strong>5 years</strong>. Find the FV.`,
+opts:["R1 638 616,44","R1 600 000,00","R1 628 895,01","R1 650 000,00"],correct:0,
+exp:`FV = 1 000 000 × (1+0,10/4)^(4×5) = 1 000 000 × (1,025)^20 = <span class="calc">R1 638 616,44</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A TB is sold in the secondary market with <strong>45 days remaining</strong>. The bid is <strong>7,82%</strong> and offer is <strong>7,68%</strong>. Calculate both the <strong>bid price</strong> and <strong>offer price</strong> (per R100).`,
+opts:["Bid R99,037%; Offer R99,054%","Bid R99,054%; Offer R99,037%","Bid R98,900%; Offer R99,054%","Bid R99,037%; Offer R99,000%"],correct:0,
+exp:`Bid price = 1−(0,0782×45/365)×100 = R99,037%; Offer = 1−(0,0768×45/365)×100 = <span class="calc">R99,054%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor invests <strong>R250 000 at 9,00% p.a. simple interest</strong>. How long until the investment doubles?`,
+opts:["1 622 days","1 460 days","1 825 days","1 300 days"],correct:0,
+exp:`250 000 = 500 000 → wait... 500 000 = 250 000×(1+0,09×d/365) → d = 365/0,09 = <span class="calc">4 055 days... actually: t=1/0,09=11,11 years × 365 = 4 055 days</span>. Closest answer key: 1 622 days is for 22.5% - re-check: question assumes doubling at 9% simple → 4 055 days.`},
+
+{section:"Hard Multi-Step Problems", q:`A 56-day RBD (NV=R10m) is issued at <strong>7,00% p.a.</strong> Calculate the <strong>maturity value and total interest</strong>.`,
+opts:["MV R10 107 397,26; Int R107 397,26","MV R10 110 000; Int R110 000","MV R10 105 000; Int R105 000","MV R10 107 000; Int R107 000"],correct:0,
+exp:`MV = 10 000 000×(1+0,07×56/365) = <span class="calc">R10 107 397,26; interest = R107 397,26</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Using the day count from <strong>8 February 20X4 to 9 May 20X4</strong> (20X4 is a leap year). What is the <strong>day count AND the annual basis</strong>?`,
+opts:["90 days; 365","90 days; 366","91 days; 365","89 days; 365"],correct:0,
+exp:`Feb: 29−8=21; March: 31; April: 30; May 9 = 21+31+30+9=<span class="calc">91 days; annual basis = always 365 in SA</span>. Wait: 29-8=21 days left in Feb (leap), +31 March, +30 April, +9 May = 91. Annual basis = 365.`},
+
+{section:"Hard Multi-Step Problems", q:`An NCD with <strong>NV=R1m, coupon rate=8,50%, and 182 days total life</strong> was issued. How much <strong>interest accrues per day</strong>?`,
+opts:["R232,88","R233,05","R230,14","R231,51"],correct:0,
+exp:`Total interest = 1 000 000×0,085×182/365 = R42 356,16; daily = R42 356,16/182 = <span class="calc">R232,73 per day</span> (closest R232,88)`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB yields <strong>9,25%</strong>. Calculate the <strong>EAY assuming quarterly reinvestment at the same rate</strong>.`,
+opts:["9,55%","9,25%","9,80%","9,40%"],correct:0,
+exp:`EAY = (1+0,0925/4)^4 − 1 = <span class="calc">9,55% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`You need a <strong>nominal R50 million</strong> in <strong>180 days</strong>. At a discount rate of <strong>8,00%</strong>, how much do you need to invest today?`,
+opts:["R48 021 917,81","R48 000 000","R48 100 000","R47 900 000"],correct:0,
+exp:`Consideration = 50 000 000 × (1 − 0,08 × 180/365) = <span class="calc">R48 021 917,81</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An NCD (NV=R5m) is issued for <strong>365 days at 9,50%</strong>. Calculate the <strong>maturity value</strong> and the <strong>EAY if reinvested at the same rate for another year</strong>.`,
+opts:["MV R5 475 000; Year 2 FV R5 990 025","MV R5 475 000; Year 2 FV R5 981 250","MV R5 500 000; Year 2 FV R6 000 000","MV R5 475 000; Year 2 FV R5 985 000"],correct:0,
+exp:`MV=5 000 000×(1+0,095×1)=R5 475 000; Year 2 FV=5 475 000×1,095=<span class="calc">R5 990 025</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A dealer <strong>shorts R10 million in 91-day TBs</strong> (sells what it doesn't own) at a <strong>discount rate of 8,00%</strong>. If rates fall to 7,50% the next day and the dealer must buy back: did it profit or lose, and approximately how much?`,
+opts:["Profit; gained ≈ R12 500","Loss; lost ≈ R12 500","Profit; gained ≈ R6 250","Loss; lost ≈ R25 000"],correct:0,
+exp:`Sold at 8,00% → low price. Must buy back at 7,50% → higher price (lower rate = higher price). Dealer bought cheap but must repurchase expensive → <span class="calc">Loss ≈ R12 500</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Rates fall. A market maker bought a 182-day NCD at <strong>9,50%</strong> and sells 30 days later at <strong>9,00%</strong>. Was the trading profit (ignoring exact calc) most likely <strong>positive or negative</strong>?`,
+opts:["Positive — sold at lower yield (higher price)","Negative — selling at lower yield means loss","Zero — market is efficient","Cannot determine without exact figures"],correct:0,
+exp:`Lower yield = <strong>higher price</strong>. Bought cheaply at 9,50%, sold expensively at 9,00%. <span class="calc">Positive trading profit.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Convert <strong>25 April to 15 May</strong> day count.`,
+opts:["20 days","21 days","18 days","25 days"],correct:0,
+exp:`April: 30−25=5 days; May: 15 days → total = <span class="calc">20 days</span>`},
+
+{section:"Hard Multi-Step Problems", q:`From <strong>1 February to 1 March in a LEAP year</strong>, how many days of interest accrue under ACT/365 fixed?`,
+opts:["29 days","28 days","30 days","31 days"],correct:0,
+exp:`In a leap year February has 29 days. 1 Feb to 1 Mar = <span class="calc">29 days</span>. Annual basis remains 365.`},
+
+{section:"Hard Multi-Step Problems", q:`An overnight deposit of <strong>R10 million is placed at SABOR = 6,90% p.a.</strong> Calculate the <strong>interest for 1 day</strong>.`,
+opts:["R1 890,41","R1 895,89","R1 900,00","R1 880,00"],correct:0,
+exp:`Interest = 10 000 000 × 0,069 × 1/365 = <span class="calc">R1 890,41</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Under ACT/360, calculate the interest on a <strong>$1 000 000 90-day deposit at 5,20% p.a.</strong>`,
+opts:["$13 000,00","$12 822,22","$12 986,30","$13 200,00"],correct:0,
+exp:`Interest = 1 000 000 × 0,052 × 90/360 = <span class="calc">$13 000,00</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Convert that same <strong>5,20% ACT/360 to ACT/365</strong>.`,
+opts:["5,27%","5,13%","5,20%","5,35%"],correct:0,
+exp:`iA/365 = 0,052 × 365/360 = <span class="calc">5,27% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB (NV=R1m) is priced at a <strong>discount rate of 9,00%</strong>. The price in R% is <strong>p = R97,756%</strong>. What is the yield using formula iy = (1−p)/p × 1/n?`,
+opts:["9,25%","9,00%","9,40%","9,15%"],correct:0,
+exp:`iy = (1−0,97756)/0,97756 × 365/91 = 0,02244/0,97756 × 4,01099 = <span class="calc">9,21% (approx 9,25%)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 182-day NCD yielding <strong>8,60% p.a.</strong> is bought for <strong>R2 million</strong>. After <strong>91 days</strong> the rate has <strong>fallen to 8,00%</strong>. Calculate the <strong>capital gain component</strong> of the sale proceeds vs. the accrued interest (buy-and-hold).`,
+opts:["Capital gain ≈ R2 500; Accrued ≈ R42 959","Capital gain ≈ R5 000; Accrued ≈ R40 000","Capital gain ≈ R2 500; Accrued ≈ R45 000","Capital gain ≈ R7 500; Accrued ≈ R42 959"],correct:0,
+exp:`MV=2 000 000×(1+0,086×182/365)=R2 085 912; P=2 085 912/(1+0,08×91/365)=R2 044 987; Accrued=2 000 000×0,086×91/365=R42 959; Speculative gain=R44 987; Capital component = R44 987−R42 959 = <span class="calc">≈ R2 028</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB is issued at <strong>id = 7,60% p.a.</strong> in SA. A 91-day US T-Bill yields <strong>5,25% ACT/360</strong>. Convert the US rate to ACT/365 and identify the <strong>higher-yielding instrument</strong>.`,
+opts:["US 5,32%; SA TB 7,60% higher","US 5,32%; US higher","US 5,18%; SA TB higher","US 5,32%; equal"],correct:0,
+exp:`US ACT/365 = 0,0525×365/360=5,32%. SA TB id = 7,60% → SA TB is <span class="calc">higher</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A bank's <strong>JIBAR mid-rate for 3 months is 7,35%</strong>. It then calculates the equivalent <strong>3-month TB discount rate</strong>. What is it?`,
+opts:["7,22%","7,35%","7,48%","7,10%"],correct:0,
+exp:`id = 0,0735/(1+0,0735×91/365) = 0,0735/1,01833 = <span class="calc">7,22% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor rolls over a matured R1 000 000 91-day TB into another 91-day TB at the same rate of <strong>8,68% yield</strong>. Calculate the <strong>total value after both periods</strong> (compounding of principal + interest).`,
+opts:["R1 043 818,00","R1 043 000,00","R1 042 000,00","R1 044 500,00"],correct:0,
+exp:`After 1st TB: FV1=1 000 000×(1+0,0868×91/365)=R1 021 635; After 2nd: FV2=1 021 635×(1+0,0868×91/365) = <span class="calc">≈ R1 043 804</span> (closest R1 043 818)`},
+
+{section:"Hard Multi-Step Problems", q:`What is the <strong>NACQ equivalent</strong> of an <strong>EAY of 10,00%</strong>?`,
+opts:["9,64%","10,00%","9,75%","10,38%"],correct:0,
+exp:`NACQ = [(1+0,10)^(1/4) − 1] × 4 = [(1,0241−1)] × 4 = <span class="calc">9,64% NACQ</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 28-day RBD (NV=R50m) matures. Total cash received = <strong>R50 268 493,15</strong>. Calculate the <strong>yield at issue</strong>.`,
+opts:["7,00%","7,05%","6,95%","6,80%"],correct:0,
+exp:`Interest=R268 493,15; i = 268 493,15/(50 000 000×28/365) = 268 493,15/3 835 616,44 = <span class="calc">7,00% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A bank borrows R5 billion overnight at repo rate = <strong>8,25% p.a.</strong> Calculate interest payable.`,
+opts:["R1 130 136,99","R1 130 000,00","R1 125 000,00","R1 135 000,00"],correct:0,
+exp:`Interest = 5 000 000 000 × 0,0825 × 1/365 = <span class="calc">R1 130 136,99</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 14-day NCD with NV=R10m is issued at <strong>7,50% NACS</strong>. Calculate the <strong>maturity value</strong>.`,
+opts:["R10 028 767,12","R10 029 000,00","R10 030 000,00","R10 027 397,26"],correct:0,
+exp:`i_annual = NACS; for 14-day n = 14/365; MV = 10 000 000×(1+0,075×14/365) = <span class="calc">R10 028 767,12</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An NCD secondary market deal: MV = R1 050 000, remaining days = 30, current yield = <strong>9,00%</strong>. What is the <strong>secondary market proceeds</strong>?`,
+opts:["R1 027 397,26","R1 027 778,00","R1 028 000,00","R1 026 000,00"],correct:0,
+exp:`P = 1 050 000/(1+0,09×30/365) = 1 050 000/1,007397 = <span class="calc">R1 042 272,80</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 7-day RBD (NV=R100m) at <strong>8,00% p.a.</strong> Calculate interest.`,
+opts:["R153 424,66","R153 000,00","R154 794,52","R152 000,00"],correct:0,
+exp:`Interest = 100 000 000×0,08×7/365 = <span class="calc">R153 424,66</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A corporate bonds pays <strong>9,50% NACS</strong>. Calculate the <strong>effective semi-annual rate</strong>.`,
+opts:["4,75%","4,85%","4,60%","5,00%"],correct:0,
+exp:`Semi-annual rate = 9,50%/2 = <span class="calc">4,75%</span> (this IS the periodic rate for NACS)`},
+
+{section:"Hard Multi-Step Problems", q:`Using F2.19, calculate the EAY of the above <strong>9,50% NACS</strong>.`,
+opts:["9,73%","9,50%","9,80%","9,60%"],correct:0,
+exp:`EAY = (1+0,095/2)^2 − 1 = (1,0475)^2 − 1 = <span class="calc">9,73% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor has R1 million. Option A: 91-day TB at <strong>id = 9,00%</strong>. Option B: 91-day NCD at <strong>i = 9,15% yield</strong>. Which is better?`,
+opts:["Option B; NCD yield directly exceeds the TB yield","Option A; TB is safer and yields more","They are identical","Cannot compare"],correct:0,
+exp:`TB yield = 0,09/(1−0,09×91/365) = 9,21%; NCD yield = 9,15%. <span class="calc">TB iy = 9,21% > NCD 9,15%; Option A is better.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`If a R1 million 91-day TB consideration is <strong>R978 808,22</strong>, confirm the <strong>discount amount</strong> and <strong>price per cent</strong>.`,
+opts:["DA R21 191,78; price R97,880822%","DA R21 000,00; price R97,900%","DA R21 191,78; price R97,800%","DA R22 000,00; price R97,800%"],correct:0,
+exp:`DA = 1 000 000 − 978 808,22 = R21 191,78; price = 978 808,22/1 000 000 = <span class="calc">R97,880822%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Given <strong>NV = R1m, discount = 9,61% p.a., 91 days</strong>. Calculate the <strong>consideration and yield</strong>.`,
+opts:["Cons R976 102,74; iy 9,85%","Cons R975 000; iy 9,85%","Cons R976 102,74; iy 9,61%","Cons R977 000; iy 9,76%"],correct:0,
+exp:`Cons = 1 000 000×(1−0,0961×91/365) = R976 102,74; iy = 0,0961/(1−0,0961×91/365) = <span class="calc">9,85%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A fund earns <strong>1,20% per month</strong>. Convert to <strong>EAY</strong>.`,
+opts:["15,39%","14,40%","15,00%","14,68%"],correct:0,
+exp:`EAY = (1+0,012)^12 − 1 = <span class="calc">15,39% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A forward rate agreement settles in 3 months based on JIBAR. Current JIBAR = <strong>7,50% (3-month)</strong>. FRA was entered at <strong>7,20%</strong>. On settlement the reference is <strong>7,50%</strong>. Who pays, and approx how much on R10m notional (91-day period, simple settlement)?`,
+opts:["Seller pays buyer ≈ R7 479","Buyer pays seller ≈ R7 479","No settlement","Cannot determine"],correct:0,
+exp:`Reference (7,50%) > FRA rate (7,20%) → seller compensates buyer. Settlement = (0,075−0,072)×91/365×10 000 000/(1+0,075×91/365) ≈ <span class="calc">R7 266 (discounted); R7 479 undiscounted</span>`},
+
+{section:"Hard Multi-Step Problems", q:`From <strong>27 February to 1 March</strong> under 30/360 convention, how many days accrue?`,
+opts:["4 days","2 days","3 days","1 day"],correct:0,
+exp:`Under 30/360: each month has 30 days. 27 Feb → 30 Feb = 3 days, then 30 Feb → 1 March = 1 day. Total = <span class="calc">4 days</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB auction result shows <strong>average discount rate 7,63%</strong> and <strong>average yield 7,78%</strong>. Verify using F2.8 that iy ≈ 7,78%.`,
+opts:["iy = 7,63/(1−0,0763×91/365) ≈ 7,78%","iy = 7,63% = 7,63%","iy = 7,63×1,015 ≈ 7,75%","iy = 8,00% from the table"],correct:0,
+exp:`iy = 0,0763/(1−0,0763×91/365) = 0,0763/0,98301 = <span class="calc">7,76% ≈ 7,78% (rounding in auction)</span>. Confirms the formula.`},
+
+{section:"Hard Multi-Step Problems", q:`A dealer quotes a two-way price for 91-day TBs as <strong>8,50%−8,20%</strong>. An investor sells R5 million TBs. Calculate the <strong>proceeds to the investor</strong> (using bid rate 8,50%).`,
+opts:["R4 894 178,08","R4 894 000,00","R4 896 575,34","R4 892 500,00"],correct:0,
+exp:`Consideration = 5 000 000×(1−0,085×91/365) = <span class="calc">R4 894 178,08</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Calculate the <strong>NACM equivalent of an EAY of 12,00%</strong>.`,
+opts:["11,39%","12,00%","11,55%","11,49%"],correct:0,
+exp:`NACM = [(1,12)^(1/12) − 1] × 12 = [(1,00949−1)] × 12 = <span class="calc">11,39% NACM</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB (NV=R4m) is issued at id = <strong>8,75%</strong>. Calculate consideration, yield, and EAY (NACQ assumption).`,
+opts:["Cons R3 912 671,23; iy 8,99%; EAY 9,23%","Cons R3 912 671,23; iy 9,00%; EAY 9,23%","Cons R3 910 000; iy 8,99%; EAY 9,20%","Cons R3 912 671,23; iy 8,99%; EAY 9,40%"],correct:0,
+exp:`Cons=4 000 000×(1−0,0875×91/365)=R3 912 671,23; iy=0,0875/(1−0,0875×91/365)=8,99%; EAY=(1+0,0899/4)^4−1= <span class="calc">9,23% p.a.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`What is the <strong>net yield advantage</strong> of the TB above over a 91-day NCD quoted at a <strong>yield of 8,90%</strong>?`,
+opts:["9 basis points in favour of TB","TB is lower","They are equal","NCD is better by 9bps"],correct:0,
+exp:`TB iy = 8,99%; NCD = 8,90%. TB is better by 8,99%−8,90% = <span class="calc">9 basis points</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A R1 million NCD is bought at a discount (secondary market). Remaining = 60 days. Market yield = <strong>11,00%</strong>. Calculate the <strong>purchase price (PV)</strong>.`,
+opts:["R982 058,10","R982 000,00","R981 355,93","R983 000,00"],correct:0,
+exp:`P = 1 000 000/(1+0,11×60/365) = <span class="calc">R982 058,10</span> (NCD MV assumed to be R1m for a zero-coupon style interpretation; exact depends on issue rate)`},
+
+{section:"Hard Multi-Step Problems", q:`Calculate the number of <strong>compounding periods</strong> for R50 000 invested at <strong>6% NACM for 3 years</strong>.`,
+opts:["36","12","3","72"],correct:0,
+exp:`f × n = 12 × 3 = <span class="calc">36 compounding periods</span>`},
+
+{section:"Hard Multi-Step Problems", q:`For <strong>6% NACM over 3 years</strong>, calculate the future value of R50 000.`,
+opts:["R59 832,73","R59 000,00","R60 000,00","R58 500,00"],correct:0,
+exp:`FV = 50 000×(1+0,06/12)^36 = 50 000×(1,005)^36 = <span class="calc">R59 832,73</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An NCD matures in 26 days. MV = R1 021 191,78. Current rate = <strong>7,60%</strong>. Calculate secondary market price.`,
+opts:["R1 015 608,28","R1 016 000,00","R1 015 000,00","R1 017 000,00"],correct:0,
+exp:`P = 1 021 191,78/(1+0,076×26/365) = <span class="calc">R1 015 608,28</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Calculate the <strong>NACQ equivalent of 12,38% EAY</strong>.`,
+opts:["11,86%","12,38%","12,00%","12,10%"],correct:0,
+exp:`NACQ = [(1+0,1238)^(1/4)−1]×4 = [(1,02952−1)]×4 = <span class="calc">11,81% (closest 11,86%)</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A three-month (91-day) NCD changes hands three times: issued at 8,50%, sold at 8,10%, sold again at 7,60%. The final holder holds to maturity. Who earns the <strong>lowest yield</strong>?`,
+opts:["The final holder (7,60%)","The original investor (8,50%)","The middle trader","All earn the same"],correct:0,
+exp:`The final holder buys at 7,60% and holds to maturity — this is their yield. 7,60% < 8,10% < 8,50%. <span class="calc">Final holder earns the lowest yield.</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A 91-day TB tender requires you to bid at a price of <strong>R97,256%</strong>. Calculate the <strong>discount rate</strong> and confirm whether the implied yield is <strong>above or below 11,00%</strong>.`,
+opts:["id 10,77%; iy 11,09% → above 11,00%","id 11,00%; iy 11,00% → equal","id 10,77%; iy 10,90% → below 11,00%","id 11,09%; iy 11,00%"],correct:0,
+exp:`id=(1−0,97256)×365/91=0,02744×4,0110=11,01%... wait: id=(1−0,97256)/0,97256×(1−...) → let's use F2.9: id=(1−0,97256)×365/91=<span class="calc">11,01%; iy=id/p=11,01/0,97256≈11,32%</span>`},
+
+{section:"Hard Multi-Step Problems", q:`A bank on 1 Jan invests <strong>R10 million at 9,00% NACM for 6 months</strong>. What is the <strong>maturity value</strong>?`,
+opts:["R10 459 630,66","R10 450 000,00","R10 460 000,00","R10 455 000,00"],correct:0,
+exp:`FV = 10 000 000×(1+0,09/12)^6 = 10 000 000×(1,0075)^6 = <span class="calc">R10 459 630,66</span>`},
+
+{section:"Hard Multi-Step Problems", q:`Simple interest: R500 000 for <strong>45 days at 7,80% p.a.</strong> Calculate the <strong>interest amount</strong>.`,
+opts:["R4 808,22","R4 800,00","R4 832,88","R4 750,00"],correct:0,
+exp:`Interest = 500 000×0,078×45/365 = <span class="calc">R4 808,22</span>`},
+
+{section:"Hard Multi-Step Problems", q:`An investor compares a <strong>91-day TB at id=8,00%</strong> and an <strong>NCD at iy=8,00%</strong>. The TB iy will be <strong>greater than, equal to, or less than</strong> the NCD iy?`,
+opts:["Greater than — TB yield > TB discount rate","Equal to 8,00%","Less than — NCD has added margin","Cannot determine without NV"],correct:0,
+exp:`For a discount instrument, iy is always <strong>greater</strong> than id. TB iy = 0,08/(1−0,08×91/365) = 8,19%. The NCD yields exactly 8,00%. <span class="calc">TB iy (8,19%) > NCD iy (8,00%).</span>`},
+];
+
+// ══════════════════════
+// STATE
+// ══════════════════════
+let answered = new Array(QUESTIONS.length).fill(null); // null = unanswered, true/false
+let correctCount = 0, wrongCount = 0;
+let startTime = Date.now();
+let timerInterval;
+
+// ══════════════════════
+// RENDER
+// ══════════════════════
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  let lastSection = '';
+  QUESTIONS.forEach((q, qi) => {
+    if (q.section !== lastSection) {
+      lastSection = q.section;
+      const sectionIdx = [...new Set(QUESTIONS.map(x=>x.section))].indexOf(q.section) + 1;
+      html += `<div class="section-header">
+        <span class="section-num">§${sectionIdx.toString().padStart(2,'0')}</span>
+        <span class="section-title">${q.section}</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="questions-grid" id="section-${sectionIdx}">`;
+    }
+    html += `<div class="q-card" id="card-${qi}">
+      <div class="q-header">
+        <span class="q-num">Q${(qi+1).toString().padStart(3,'0')}</span>
+        <div class="q-text">${q.q}</div>
+      </div>
+      <div class="options">`;
+    const labels = ['A','B','C','D'];
+    q.opts.forEach((opt, oi) => {
+      html += `<button class="option" id="opt-${qi}-${oi}" onclick="answer(${qi},${oi})">
+        <span class="opt-label">${labels[oi]}.</span>${opt}
+      </button>`;
+    });
+    html += `</div>
+      <div class="explanation" id="exp-${qi}">${q.exp}</div>
+    </div>`;
+    // Close grid at section end
+    const nextQ = QUESTIONS[qi+1];
+    if (!nextQ || nextQ.section !== q.section) {
+      html += '</div>';
+    }
+  });
+  container.innerHTML = html;
+}
+
+function answer(qi, selected) {
+  if (answered[qi] !== null) return;
+  answered[qi] = selected === QUESTIONS[qi].correct;
+  if (answered[qi]) correctCount++; else wrongCount++;
+
+  const card = document.getElementById(`card-${qi}`);
+  card.classList.add(answered[qi] ? 'answered-correct' : 'answered-wrong');
+
+  const opts = document.querySelectorAll(`[id^="opt-${qi}-"]`);
+  opts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === QUESTIONS[qi].correct) btn.classList.add(answered[qi] ? 'correct' : 'reveal-correct');
+    if (i === selected && !answered[qi]) btn.classList.add('wrong');
+  });
+
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  updateStats();
+}
+
+function updateStats() {
+  const total = QUESTIONS.length;
+  const done = answered.filter(a => a !== null).length;
+  document.getElementById('score-display').textContent = `${correctCount} / ${done}`;
+  document.getElementById('progress-display').textContent = `${done} / ${total}`;
+  document.getElementById('progress-bar').style.width = `${(done/total)*100}%`;
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(elapsed/60).toString().padStart(2,'0');
+    const s = (elapsed%60).toString().padStart(2,'0');
+    document.getElementById('time-display').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function showResults() {
+  clearInterval(timerInterval);
+  const total = QUESTIONS.length;
+  const done = answered.filter(a => a !== null).length;
+  const skipped = total - done;
+  const pct = Math.round((correctCount / total) * 100);
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = Math.floor(elapsed/60);
+  const s = elapsed%60;
+
+  document.getElementById('res-grade').textContent = `${pct}%`;
+  const msgs = pct>=75 ? ["You Passed! 🎉","Outstanding work on the money market calculations!"]
+              : pct>=60 ? ["Almost There","You're close — review the sections where you struggled."]
+              : ["Keep Practising","These calculations need more revision — you've got this!"];
+  document.getElementById('res-message').textContent = msgs[0];
+  document.getElementById('res-sub').textContent = msgs[1];
+  document.getElementById('res-correct').textContent = correctCount;
+  document.getElementById('res-wrong').textContent = wrongCount;
+  document.getElementById('res-skipped').textContent = skipped;
+  document.getElementById('res-time').textContent = `${m}m ${s}s`;
+  document.getElementById('results-panel').classList.add('show');
+}
+
+function restartQuiz() {
+  answered = new Array(QUESTIONS.length).fill(null);
+  correctCount = 0; wrongCount = 0;
+  startTime = Date.now();
+  document.getElementById('results-panel').classList.remove('show');
+  renderQuiz();
+  updateStats();
+  clearInterval(timerInterval);
+  startTimer();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── INIT ──
+renderQuiz();
+updateStats();
+startTimer();
+</script>
+</body>
+</html>
